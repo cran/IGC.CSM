@@ -1,3 +1,4 @@
+
 #' Function to solve counterfactuals.
 #'
 #' @param N Integer - Number of locations.
@@ -10,6 +11,7 @@
 #' @param varphi Nx1 array - Density of development
 #' @param w_eq Nx1 array - Initial vector of wages
 #' @param u_eq Nx1 array - Initial vector of welfare
+#' @param U_eq 1x1 array - Initial  welfare
 #' @param Q_eq Nx1 array - Initial price for floorspace
 #' @param ttheta_eq Nx1 array - Share of floorspace used commercially 
 #' @param alpha Float - Exp. share in consumption, 1-alpha exp. share in housing
@@ -22,46 +24,20 @@
 #' @param eta Float - amenity externality
 #' @param epsilon Float - Parameter that transforms travel times to commuting costs
 #' @param zeta Float - convergence parameter
-#' @param tol Int - tolerance factor
+#' @param tol Float - tolerance factor
+#' @param varrho Float - migration elasticty
+#' @param sh_city Share of population living in the city
 #' @param maxiter Integer - Maximum number of iterations for convergence.
 #'     Default maxiter=1000.
-#' @param verbose Boolean - Equal to TRUE to print verbose.
 #' 
-#' @return Counterfactual values.
+#' @return A list containing new equilibrium values for the variables of the model. 
+#' The reported variables are wages (w), residents market access (W_i), endogenous productivities (A), 
+#' endogenous amenities (B), population (Li), employment (Lj), share of commercial floorspace (ttheta),
+#' real income (u), welfare (U), firms market access (FCMA), firms output (Y). 
+
 #' @export
 #'
-#' @examples
-#' N=5
-#' L_i = c(63, 261, 213, 182, 113)
-#' L_j = c(86, 278, 189, 180, 99)
-#' Q = c(2123, 1576, 1371, 1931, 1637)
-#' K = c(0.44, 1.45, 1.15, 0.87, 0.58)
-#' t_ij = rbind(c(0.0, 6.6, 5.5, 5.6, 6.4),
-#'              c(6.7, 0.0, 3.9, 4.6, 4.4),
-#'              c(5.5, 3.9, 0.0, 2.8, 3.0),
-#'              c(5.6, 4.6, 2.8, 0.0, 2.7),
-#'              c(6.4, 4.4, 3.0, 2.7, 0.0))
-#' 
-#' a = c(1.7, 1.7, 1.6, 1.8, 1.6)
-#' b = c(2.2, 2.5, 2.4, 2.6, 2.3)
-#' varphi = c(95, 219, 215, 167, 148)
-#' w_eq = c(0.9, 1.0, 1.0, 1.0, 0.9)
-#' u_eq = c(1.0, 1.3, 1.2, 1.2, 1.1)
-#' Q_eq = c(1.2, 0.9, 0.8, 1.1, 0.9)
-#' ttheta_eq = c(0.5, 0.4, 0.4, 0.4, 0.4)
-#' solveModel(N=N,
-#'            L_i=L_i,
-#'            L_j=L_j,
-#'            K=K,
-#'            t_ij=t_ij,
-#'            a=a,
-#'            b=b,
-#'            varphi=varphi,
-#'            w_eq=w_eq,
-#'            u_eq=u_eq,
-#'            Q_eq=Q_eq,
-#'            ttheta_eq=ttheta_eq)
-#'            
+
 solveModel = function(N,
                       L_i,
                       L_j,
@@ -72,6 +48,7 @@ solveModel = function(N,
                       varphi,
                       w_eq,
                       u_eq,
+                      U_eq, 
                       Q_eq,
                       ttheta_eq,
                       alpha=0.7,
@@ -81,13 +58,14 @@ solveModel = function(N,
                       delta=0.3585,
                       lambda=0.01,
                       rho=0.9094,
-                      eta=0.1548,
+                      eta=0.15,
                       epsilon=0.01,
                       zeta=0.95,
+                      varrho=3,
+                      sh_city = 0.1,
                       tol=10^-10,
-                      maxiter=1000,
-                      verbose=FALSE){
-
+                      maxiter=1000){
+  
   # Formatting of input data
   if(is.data.frame(L_i)){
     L_i = array(unlist(L_i), dim(L_i))
@@ -105,9 +83,9 @@ solveModel = function(N,
   } else if(is.null(dim(K))){
     K = array(K, dim=c(N,1))
   }
-
+  
   t_ij = array(unlist(t_ij), dim(t_ij))  
-
+  
   if(is.null(dim(a))){
     a = array(a, dim=c(N,1))
   }
@@ -123,6 +101,11 @@ solveModel = function(N,
   if(is.null(dim(u_eq))){
     u_eq = array(u_eq, dim=c(N,1))
   }
+  
+  if(is.null(dim(U_eq))){
+    U_eq = array(U_eq, dim=c(1,1))
+  }
+  
   if(is.null(dim(Q_eq))){
     Q_eq = array(Q_eq, dim=c(N,1))
   }
@@ -132,6 +115,9 @@ solveModel = function(N,
   
   # Normalize L_i to have the same size as L_j
   L_i=L_i*sum(L_j)/sum(L_i)
+  L_bar=sum(L_i)
+  L_bar_init = L_bar
+  lambda_i = array_operator(L_i, L_bar, '/')
   
   D = commuting_matrix(t_ij=t_ij, epsilon = epsilon)
   tau = D$tau
@@ -143,14 +129,14 @@ solveModel = function(N,
   outerdiff = Inf;
   w = w_eq;
   u = u_eq;
+  U_init = U_eq;
   Q = Q_eq;
-  ttheta = ttheta_eq
+  Vo_varrho  = ((U_eq^varrho)*(1-sh_city))/(sh_city)
+  ttheta = ttheta_eq;
   iter = 0;
   zeta_init = zeta;
   
-  if(verbose==TRUE){
-    cat("Solving model...\n")
-  }
+  cat("Solving model...\n")
   
   while(outerdiff>tol & iter < maxiter){
     # 1) Labor supply equation
@@ -159,12 +145,13 @@ solveModel = function(N,
     # Constructing employment shares
     w_tr_tau = array_operator(w_tr^theta, tau^(-theta), '*');
     lambda_ij_i = array_operator(w_tr_tau, sumDims2(w_tr_tau,2), '/');
+    
     W_i = (sumDims2(w_tr_tau,2))^(1/theta);
+    
     # Labor is equal to probabilities * total number of residents * proportion of workers in each sector.
     L_ij = array_operator(L_i, lambda_ij_i, '*')
     L_j = sumDims2(L_ij, 1)
-    L = sum(L_i)
-    lambda_i = L_i/L
+    
     
     # 2 average income
     av_income = av_income_simple(lambda_ij_i=lambda_ij_i,w_tr = w_tr)
@@ -185,7 +172,7 @@ solveModel = function(N,
     L_i_dens_per = aperm(array(L_i_dens, dim=c(N,1)), c(2,1));
     L_i_dens_rep = kronecker(L_i_dens_per, array(1, dim=c(N, 1)));
     Omega = sumDims2(array_operator(exp(-rho*t_ij), L_i_dens_rep, '*'), 2);
-    B = array_operator(b, Omega^(-eta),'*')
+    B = array_operator(b, Omega^(eta),'*')
     
     # 6 Residents, probabilities, and welfare
     u =  array_operator(array_operator(W_i, Q^(1-alpha), '/'), B, '*')
@@ -206,16 +193,41 @@ solveModel = function(N,
     Q_upd = Q_upd1*(a>0) + Q_upd2*(a==0 & b>0)
     
     # 9 Share of commercial floorspace
-    LP = array_operator(Q_upd1, array_operator(varphi, K^(1-mu), '*'), '*')
-    ttheta_upd = (1-beta)*array_operator(Y, LP, '/')
-    ttheta_upd = (b==0)+ttheta_upd*(b>0)
-    
+    #LP = array_operator(Q_upd1, array_operator(varphi, K^(1-mu), '*'), '*')
+    #ttheta_upd = (1-beta)*array_operator(Y, LP, '/')
+    #ttheta_upd = (b==0)+ttheta_upd*(b>0)
+    FS_f_upd    = (1-beta)*array_operator(Y,Q_upd, '/')
+    FS_r_upd    = (1-alpha)*array_operator(X,Q_upd, '/')
+    ttheta_upd  = array_operator(FS_f_upd, FS_f_upd+FS_r_upd,'/')
+
     # 10 Calculating the main differences
     z_w = array_operator(w, w_upd, '-')
     z_L = array_operator(lambda_i, lambda_i_upd, '-')
     z_Q = array_operator(Q, Q_upd, '-')
     z_theta = array_operator(ttheta, ttheta_upd, '-')
-    outerdiff = max(c(max(abs(z_w)), max(abs(z_L)), max(abs(z_Q)), max(abs(z_theta))))
+    #z_U = array_operator(U, U_init, '-')
+    
+    
+    if (varrho>0){
+      sh_city_upd = (U^(varrho))/((U^(varrho))+Vo_varrho)
+      Lhat        = sh_city_upd/sh_city
+      L_bar_upd   = Lhat*L_bar_init
+      z_L_bar     = L_bar-L_bar_upd
+      L_bar       = zeta*L_bar_upd + (1-zeta)*L_bar
+    }
+    
+    if (varrho==0){
+      sh_city_upd = sh_city
+      L_bar       = L_bar
+      Lhat        = 1
+      z_L_bar     = 0
+    }
+    
+    #outerdiff = max(c(max(abs(z_w)), max(abs(z_L)), max(abs(z_Q)), max(abs(z_theta)), max(abs(z_U)), abs(z_L_bar)))
+    outerdiff = max(c(max(abs(z_w)), max(abs(z_L)), max(abs(z_Q)),  max(abs(z_theta)), abs(z_L_bar)))
+    
+    #Lbar_upd  = L_bar*(1 + 0.25*(array_operator(array_operator(U, U_init, '-'), U_init, '/'))); 
+    
     iter = iter+1
     
     # 11 New vector of variables
@@ -223,17 +235,27 @@ solveModel = function(N,
     Q = zeta*Q + (1-zeta)*Q_upd
     w = zeta*w + (1-zeta)*w_upd
     ttheta = zeta*ttheta + (1-zeta)*ttheta_upd
-    L_i = lambda_i*L
-    if((iter %% 10 == 0) & (verbose==TRUE)){
+    
+    #L_bar = zeta*Lbar_upd + (1-zeta)*L_bar
+    L_i = array_operator(L_bar, lambda_i, '*')
+    
+    
+    #12 Firms market access
+    WA = array_operator(L_i, tau^(-theta), '*');
+    FCMA = array_operator(WA, W_i, '/');
+    FCMA = (sumDims2(FCMA,2))^(1/theta);   
+    
+    
+    if(iter %% 25 == 0){
       cat(paste0("Iteration: ", iter, ", error: ", round(outerdiff, 10), ".\n"))
     }
   }
-  if((outerdiff<=tol) & (verbose==TRUE)){
+  if(outerdiff<=tol){
     cat(paste0("Converged after ", iter, " iterations. Error=", round(outerdiff, 10), ".\n"))
-  } else if(verbose==TRUE){
+  } else{
     cat(paste0("Reached maximum number of iterations (", iter, "). Error=", round(outerdiff, 10), ".\n"))
   }
   
-  return(list(w=w, W_i=W_i, B=B, A=A, Q=Q, lambda_ij_i=lambda_ij_i, L_i=L_i, L_j=L_j,
-              ybar=ybar, lambda_i=lambda_i, ttheta=ttheta, u=u, U=U))
+  return(list(w=w, W_i=W_i, B=B, A=A, Q=Q, L_i=L_i, L_j=L_j,
+              ybar=ybar, lambda_i=lambda_i, ttheta=ttheta, u=u, U=U, L_bar=L_bar, FCMA=FCMA, Y=Y))
 }

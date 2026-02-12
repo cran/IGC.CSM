@@ -15,6 +15,7 @@ solveModel(
   varphi,
   w_eq,
   u_eq,
+  U_eq,
   Q_eq,
   ttheta_eq,
   alpha = 0.7,
@@ -24,12 +25,13 @@ solveModel(
   delta = 0.3585,
   lambda = 0.01,
   rho = 0.9094,
-  eta = 0.1548,
+  eta = 0.15,
   epsilon = 0.01,
   zeta = 0.95,
+  varrho = 3,
+  sh_city = 0.1,
   tol = 10^-10,
-  maxiter = 1000,
-  verbose = FALSE
+  maxiter = 1000
 )
 }
 \arguments{
@@ -52,6 +54,8 @@ solveModel(
 \item{w_eq}{Nx1 array - Initial vector of wages}
 
 \item{u_eq}{Nx1 array - Initial vector of welfare}
+
+\item{U_eq}{1x1 array - Initial  welfare}
 
 \item{Q_eq}{Nx1 array - Initial price for floorspace}
 
@@ -77,49 +81,21 @@ solveModel(
 
 \item{zeta}{Float - convergence parameter}
 
-\item{tol}{Int - tolerance factor}
+\item{varrho}{Float - migration elasticty}
+
+\item{sh_city}{Share of population living in the city}
+
+\item{tol}{Float - tolerance factor}
 
 \item{maxiter}{Integer - Maximum number of iterations for convergence.
 Default maxiter=1000.}
-
-\item{verbose}{Boolean - Equal to TRUE to print verbose.}
 }
 \value{
-Counterfactual values.
+A list containing new equilibrium values for the variables of the model.
+The reported variables are wages (w), residents market access (W_i), endogenous productivities (A),
+endogenous amenities (B), population (Li), employment (Lj), share of commercial floorspace (ttheta),
+real income (u), welfare (U), firms market access (FCMA), firms output (Y).
 }
 \description{
 Function to solve counterfactuals.
-}
-\examples{
-N=5
-L_i = c(63, 261, 213, 182, 113)
-L_j = c(86, 278, 189, 180, 99)
-Q = c(2123, 1576, 1371, 1931, 1637)
-K = c(0.44, 1.45, 1.15, 0.87, 0.58)
-t_ij = rbind(c(0.0, 6.6, 5.5, 5.6, 6.4),
-             c(6.7, 0.0, 3.9, 4.6, 4.4),
-             c(5.5, 3.9, 0.0, 2.8, 3.0),
-             c(5.6, 4.6, 2.8, 0.0, 2.7),
-             c(6.4, 4.4, 3.0, 2.7, 0.0))
-
-a = c(1.7, 1.7, 1.6, 1.8, 1.6)
-b = c(2.2, 2.5, 2.4, 2.6, 2.3)
-varphi = c(95, 219, 215, 167, 148)
-w_eq = c(0.9, 1.0, 1.0, 1.0, 0.9)
-u_eq = c(1.0, 1.3, 1.2, 1.2, 1.1)
-Q_eq = c(1.2, 0.9, 0.8, 1.1, 0.9)
-ttheta_eq = c(0.5, 0.4, 0.4, 0.4, 0.4)
-solveModel(N=N,
-           L_i=L_i,
-           L_j=L_j,
-           K=K,
-           t_ij=t_ij,
-           a=a,
-           b=b,
-           varphi=varphi,
-           w_eq=w_eq,
-           u_eq=u_eq,
-           Q_eq=Q_eq,
-           ttheta_eq=ttheta_eq)
-           
 }

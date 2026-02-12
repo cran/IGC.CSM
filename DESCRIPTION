@@ -1,7 +1,7 @@
 Package: IGC.CSM
 Title: Simulate Impact of Different Urban Policies Through a General
         Equilibrium Model
-Version: 0.2.0
+Version: 0.3.0
 Authors@R: c(
     person(given="David", family="Zarruk", email="davidzarruk@gmail.com", role = c("aut")),
     person(given="Roman", family="Zarate", email="rd.zarate40@gmail.com", role = c("aut", "cre")))
@@ -10,9 +10,9 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 RoxygenNote: 7.2.1
 NeedsCompilation: no
-Packaged: 2024-09-27 01:23:43 UTC; zarruk
+Packaged: 2026-02-12 22:09:47 UTC; zarruk
 Author: David Zarruk [aut],
   Roman Zarate [aut, cre]
 Maintainer: Roman Zarate <rd.zarate40@gmail.com>
 Repository: CRAN
-Date/Publication: 2024-09-30 10:40:03 UTC
+Date/Publication: 2026-02-12 22:30:02 UTC
