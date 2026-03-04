@@ -1,4 +1,3 @@
-
 #' Function to solve counterfactuals.
 #'
 #' @param N Integer - Number of locations.
@@ -10,8 +9,7 @@
 #' @param b Nx1 array - Vector of amenities in each location
 #' @param varphi Nx1 array - Density of development
 #' @param w_eq Nx1 array - Initial vector of wages
-#' @param u_eq Nx1 array - Initial vector of welfare
-#' @param U_eq 1x1 array - Initial  welfare
+#' @param u_eq Nx1 array - Initial vector of real income
 #' @param Q_eq Nx1 array - Initial price for floorspace
 #' @param ttheta_eq Nx1 array - Share of floorspace used commercially 
 #' @param alpha Float - Exp. share in consumption, 1-alpha exp. share in housing
@@ -24,17 +22,15 @@
 #' @param eta Float - amenity externality
 #' @param epsilon Float - Parameter that transforms travel times to commuting costs
 #' @param zeta Float - convergence parameter
-#' @param tol Float - tolerance factor
-#' @param varrho Float - migration elasticty
-#' @param sh_city Share of population living in the city
+#' @param tol Int - tolerance factor
+#' @param L_bar
+#' @param varrho migration elasticty
+#' @param sh_city share of population living in the city
 #' @param maxiter Integer - Maximum number of iterations for convergence.
 #'     Default maxiter=1000.
+#' @param verbose Boolean - Equal to TRUE to print verbose.
 #' 
-#' @return A list containing new equilibrium values for the variables of the model. 
-#' The reported variables are wages (w), residents market access (W_i), endogenous productivities (A), 
-#' endogenous amenities (B), population (Li), employment (Lj), share of commercial floorspace (ttheta),
-#' real income (u), welfare (U), firms market access (FCMA), firms output (Y). 
-
+#' @return Counterfactual values.
 #' @export
 #'
 
@@ -48,7 +44,6 @@ solveModel = function(N,
                       varphi,
                       w_eq,
                       u_eq,
-                      U_eq, 
                       Q_eq,
                       ttheta_eq,
                       alpha=0.7,
@@ -58,13 +53,14 @@ solveModel = function(N,
                       delta=0.3585,
                       lambda=0.01,
                       rho=0.9094,
-                      eta=0.15,
+                      eta=0.1548,
                       epsilon=0.01,
                       zeta=0.95,
                       varrho=3,
                       sh_city = 0.1,
                       tol=10^-10,
-                      maxiter=1000){
+                      maxiter=1000,
+                      verbose=FALSE){
   
   # Formatting of input data
   if(is.data.frame(L_i)){
@@ -101,11 +97,6 @@ solveModel = function(N,
   if(is.null(dim(u_eq))){
     u_eq = array(u_eq, dim=c(N,1))
   }
-  
-  if(is.null(dim(U_eq))){
-    U_eq = array(U_eq, dim=c(1,1))
-  }
-  
   if(is.null(dim(Q_eq))){
     Q_eq = array(Q_eq, dim=c(N,1))
   }
@@ -116,7 +107,6 @@ solveModel = function(N,
   # Normalize L_i to have the same size as L_j
   L_i=L_i*sum(L_j)/sum(L_i)
   L_bar=sum(L_i)
-  L_bar_init = L_bar
   lambda_i = array_operator(L_i, L_bar, '/')
   
   D = commuting_matrix(t_ij=t_ij, epsilon = epsilon)
@@ -129,9 +119,8 @@ solveModel = function(N,
   outerdiff = Inf;
   w = w_eq;
   u = u_eq;
-  U_init = U_eq;
+  U_init = (sumDims(u^theta,1))^(1/theta)
   Q = Q_eq;
-  Vo_varrho  = ((U_eq^varrho)*(1-sh_city))/(sh_city)
   ttheta = ttheta_eq;
   iter = 0;
   zeta_init = zeta;
@@ -172,10 +161,10 @@ solveModel = function(N,
     L_i_dens_per = aperm(array(L_i_dens, dim=c(N,1)), c(2,1));
     L_i_dens_rep = kronecker(L_i_dens_per, array(1, dim=c(N, 1)));
     Omega = sumDims2(array_operator(exp(-rho*t_ij), L_i_dens_rep, '*'), 2);
-    B = array_operator(b, Omega^(eta),'*')
+    B = array_operator(b, Omega^(-eta),'*')
     
     # 6 Residents, probabilities, and welfare
-    u =  array_operator(array_operator(W_i, Q^(1-alpha), '/'), B, '*')
+    u = array_operator(array_operator(W_i, Q^(1-alpha), '/'), B, '*')
     U = sum(u^theta)
     lambda_i_upd = (u^theta)/U
     U = U^(1/theta)
@@ -193,13 +182,10 @@ solveModel = function(N,
     Q_upd = Q_upd1*(a>0) + Q_upd2*(a==0 & b>0)
     
     # 9 Share of commercial floorspace
-    #LP = array_operator(Q_upd1, array_operator(varphi, K^(1-mu), '*'), '*')
-    #ttheta_upd = (1-beta)*array_operator(Y, LP, '/')
-    #ttheta_upd = (b==0)+ttheta_upd*(b>0)
-    FS_f_upd    = (1-beta)*array_operator(Y,Q_upd, '/')
-    FS_r_upd    = (1-alpha)*array_operator(X,Q_upd, '/')
-    ttheta_upd  = array_operator(FS_f_upd, FS_f_upd+FS_r_upd,'/')
-
+    LP = array_operator(Q_upd1, array_operator(varphi, K^(1-mu), '*'), '*')
+    ttheta_upd = (1-beta)*array_operator(Y, LP, '/')
+    ttheta_upd = (b==0)+ttheta_upd*(b>0)
+    
     # 10 Calculating the main differences
     z_w = array_operator(w, w_upd, '-')
     z_L = array_operator(lambda_i, lambda_i_upd, '-')
@@ -208,23 +194,21 @@ solveModel = function(N,
     #z_U = array_operator(U, U_init, '-')
     
     
-    if (varrho>0){
-      sh_city_upd = (U^(varrho))/((U^(varrho))+Vo_varrho)
-      Lhat        = sh_city_upd/sh_city
-      L_bar_upd   = Lhat*L_bar_init
-      z_L_bar     = L_bar-L_bar_upd
-      L_bar       = zeta*L_bar_upd + (1-zeta)*L_bar
+    if (varrho >0){
+      uhat      = U/U_init
+      Lhat      = uhat^(varrho)/(sh_city*uhat^(varrho)+(1-sh_city))
+      L_bar_upd  = Lhat*L_bar
+      L_bar      = zeta*L_bar_upd + (1-zeta)*L_bar
+      z_L_bar       = L_bar-L_bar_upd
     }
     
     if (varrho==0){
-      sh_city_upd = sh_city
-      L_bar       = L_bar
-      Lhat        = 1
-      z_L_bar     = 0
+      L_bar      = L_bar
+      z_L_bar       = 0
     }
     
     #outerdiff = max(c(max(abs(z_w)), max(abs(z_L)), max(abs(z_Q)), max(abs(z_theta)), max(abs(z_U)), abs(z_L_bar)))
-    outerdiff = max(c(max(abs(z_w)), max(abs(z_L)), max(abs(z_Q)),  max(abs(z_theta)), abs(z_L_bar)))
+    outerdiff = max(c(max(abs(z_w)), max(abs(z_L)), max(abs(z_Q)), max(abs(z_theta)), abs(z_L_bar)))
     
     #Lbar_upd  = L_bar*(1 + 0.25*(array_operator(array_operator(U, U_init, '-'), U_init, '/'))); 
     

@@ -15,6 +15,7 @@
 #' @param maxiter Integer - Maximum number of iterations for convergence.
 #'     Default maxiter=10000.
 #' @param verbose Boolean - Equal to TRUE to print verbose.
+#'     
 #'
 #' @return A list with equilibrium wages and probability of workers in each
 #'     location working in every other location.
@@ -35,10 +36,7 @@ wages_inversion = function(N,
   iter = 0
   nu = nu_init
   
-  if(verbose==TRUE){
-    cat("Inverting wages...\n")
-  }
-  
+  cat("Inverting wages...\n")
   while(outerdiff>tol & iter<maxiter){
     # 1) Labor supply
     # Indirect utility
@@ -64,13 +62,13 @@ wages_inversion = function(N,
     
     iter = iter+1;
     
-    if((iter %% 10 == 0) & (verbose==TRUE)){
+    if(iter %% 10 == 0){
       cat(paste0("Iteration: ", iter, ", error: ", round(outerdiff, 10), ".\n"))
     }
   }
-  if((outerdiff<=tol) & (verbose==TRUE)){
+  if(outerdiff<=tol){
     cat(paste0("Converged after ", iter, " iterations. Error=", round(outerdiff, 10), ".\n"))
-  } else if (verbose==TRUE){
+  } else{
     cat(paste0("Reached maximum number of iterations (", iter, "). Error=", round(outerdiff, 10), ".\n"))
   }
   

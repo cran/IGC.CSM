@@ -100,8 +100,26 @@ This directory has all the functions to simulate the model from Ahlfedlt et al. 
 **Output**: B_i Endogenous amenity measure (takes into account the externalities)
 			b_i baseline and exogenous amenity measure
 
-## 2.7 inversionModel.R		
-**Goal**: an R function to invert the model and recover the economy fundamentals
+## 2.5b density_development_noprices.R
+**Goal**: an R function to compute residential and commercial floorspace when floorspace prices are not observed
+**Description**: uses observed total floorspace instead of prices to back out the equilibrium price and development density.
+**Input**: K size of each location
+		   w vector of wages
+		   L_j number of workers
+		   y_bar average income
+		   L_i number of residents
+		   beta output elasticity wrt labor
+		   alpha exp. share in the consumption good
+		   mu land development output elasticity wrt capital
+		   FS total floorspace in each location
+**Output**: Q_norm normalized floorspace prices
+			varphi density of development
+			FS_f commercial floorspace
+			FS_r residential floorspace
+			FS total floorspace
+
+## 2.7 inversionModel.R
+**Goal**: an R function to invert the model and recover the economy fundamentals (requires floorspace prices)
 **Description**: self-explanatory.
 **Input**: N number of locations
 		   Q_i vector of housing prices
@@ -109,18 +127,19 @@ This directory has all the functions to simulate the model from Ahlfedlt et al. 
 		   L_j number of workers in each location
 		   K size of each location
 		   t_ij travel times matrix
-		   zeta convergence parameter
-		   tol tolerance factor 
+		   tol tolerance factor
 		   alpha exp. share in the consumption good
 		   beta output elasticity wrt labor
 		   theta commuting elasticity
 		   delta decay parameter agglomeration
 		   rho decay parameter of congestion forces
-		   lambda  strength of the agglomeration force	
+		   lambda  strength of the agglomeration force
 		   eta strength of the congestion force
-		   epsilon paramet travel times to commuting costs
+		   epsilon parameter transforming travel times to commuting costs
 		   mu land development output elasticity wrt capital
-**Output**: This function uses all the other function as inputs
+**Output**: This function uses all the other functions as inputs
+			L_i number of residents
+			L_j number of workers
 			A_i Endogenous TFP measure (takes into account the externalities)
 			a_i baseline and exogenous productivity measure
 			B_i Endogenous amenity measure (takes into account the externalities)
@@ -128,41 +147,71 @@ This directory has all the functions to simulate the model from Ahlfedlt et al. 
 			w_j vector of wages that match the model with the data
 			varphi density of development
 			Q_norm housing prices normalized
+			u real income in each location
+			U aggregate welfare
 
-## 2.7 solveModel.R		
+## 2.8 PricesInversionModel.R
+**Goal**: an R function to invert the model when floorspace prices are observed
+**Description**: same as inversionModel but additionally returns floorspace components.
+**Input**: same as inversionModel
+**Output**: same as inversionModel plus
+			FS total floorspace
+			FS_f commercial floorspace
+			FS_r residential floorspace
+
+## 2.9 NoPricesInversionModel.R
+**Goal**: an R function to invert the model when floorspace prices are not observed but total floorspace is known
+**Description**: uses density_development_noprices internally to back out equilibrium prices from observed floorspace.
+**Input**: N number of locations
+		   L_i number of residents in each location
+		   L_j number of workers in each location
+		   K size of each location
+		   t_ij travel times matrix
+		   FS total floorspace in each location
+		   alpha, beta, theta, delta, rho, lambda, eta, epsilon, mu (same as inversionModel)
+**Output**: L_i, L_j, Q_norm, A, a, B, b, w, varphi, U, ttheta, FS, FS_r, FS_f
+			u real income in each location
+			U aggregate welfare
+
+## 2.10 solveModel.R
 **Goal**: an R function to solve the model and compute counterfactuals
 **Description**: self-explanatory.
 **Input**: N number of locations
 		   L_i initial number of residents in each location
+		   L_j initial number of workers in each location
 		   K size of each location
 		   t_ij travel times matrix
 		   a baseline productivity
 		   b baseline amenity
-		   endo_Lr update residents or not
+		   varphi density of development
+		   w_eq initial vector of wages
+		   u_eq initial vector of real income
+		   Q_eq initial vector of floorspace prices
+		   ttheta_eq initial share of floorspace used commercially
 		   alpha exp. share in the consumption good
 		   beta output elasticity wrt labor
 		   theta commuting elasticity
 		   delta decay parameter agglomeration
 		   rho decay parameter of congestion forces
-		   lambda  strength of the agglomeration force	
+		   lambda  strength of the agglomeration force
 		   eta strength of the congestion force
-		   epsilon paramet travel times to commuting costs
+		   epsilon parameter transforming travel times to commuting costs
 		   mu land development output elasticity wrt capital
-		   w_eq initial vector of wages
-		   Q_eq initial vector of housing prices
-		   theta_eq initial share of floorspace used commercially
+		   varrho migration elasticity
+		   sh_city share of population living in the city
 **Output**: w new vector of wages
 			W_i new commuter market access measure
 			B new vector of amenities (takes into account the externalities)
 			A new vector of productivities (takes into account the externalities)
 			Q new vector of floorspace prices
-			lambda_ij_i new matrix of commuting shares
 			L_i new vector of residents
 			L_j new vector of workers
 			ybar average income
 			ttheta new vector of the share of floorspace used commercially
-			u welfare in each location (not considering the shock)
-			U aggregate welfare			
+			u real income in each location
+			U aggregate welfare
+			FCMA firms market access
+			Y total output by location
 
 
 

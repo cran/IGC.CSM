@@ -21,7 +21,7 @@ inversionModel(
   epsilon = 0.01,
   mu = 0.3,
   eta = 0.1548,
-  nu_init = 0.005,
+  nu_init = 0.05,
   tol = 10^-10,
   maxiter = 1000,
   verbose = FALSE
@@ -70,7 +70,9 @@ Default maxiter=1000.}
 \item{verbose}{Boolean - Equal to TRUE to print verbose.}
 }
 \value{
-Equilibrium values.
+A list containing equilibrium values: population (L_i), employment (L_j), productivities (A, a),
+real income (u), amenities (B, b), wages (w), density of development (varphi),
+welfare (U), normalized prices (Q_norm), and commercial floorspace share (ttheta).
 }
 \description{
 Function to invert model, so amenities, wages, productivities, and development density

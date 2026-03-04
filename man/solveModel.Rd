@@ -15,7 +15,6 @@ solveModel(
   varphi,
   w_eq,
   u_eq,
-  U_eq,
   Q_eq,
   ttheta_eq,
   alpha = 0.7,
@@ -25,13 +24,14 @@ solveModel(
   delta = 0.3585,
   lambda = 0.01,
   rho = 0.9094,
-  eta = 0.15,
+  eta = 0.1548,
   epsilon = 0.01,
   zeta = 0.95,
   varrho = 3,
   sh_city = 0.1,
   tol = 10^-10,
-  maxiter = 1000
+  maxiter = 1000,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -53,9 +53,7 @@ solveModel(
 
 \item{w_eq}{Nx1 array - Initial vector of wages}
 
-\item{u_eq}{Nx1 array - Initial vector of welfare}
-
-\item{U_eq}{1x1 array - Initial  welfare}
+\item{u_eq}{Nx1 array - Initial vector of real income}
 
 \item{Q_eq}{Nx1 array - Initial price for floorspace}
 
@@ -89,6 +87,8 @@ solveModel(
 
 \item{maxiter}{Integer - Maximum number of iterations for convergence.
 Default maxiter=1000.}
+
+\item{verbose}{Boolean - Equal to TRUE to print verbose.}
 }
 \value{
 A list containing new equilibrium values for the variables of the model.

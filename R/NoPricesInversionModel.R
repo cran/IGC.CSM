@@ -15,7 +15,7 @@
 #' @param rho Float - Decay parameter congestion
 #' @param lambda Float - Agglomeration force
 #' @param epsilon Float - Parameter that transforms travel times to commuting costs
-#' @param mu Float - Floorspace prod function: output elasticity wrt capital, 1-mu wrt land.     
+#' @param mu Float - Floorspace prod function: output elast wrt capital, 1-mu wrt land.     
 #' @param eta Float - Congestion force
 #' @param nu_init Float - Convergence parameter to update wages.
 #'     Default nu=0.01.
@@ -30,23 +30,23 @@
 #' @export
 
 NoPricesInversionModel = function(N,
-                          L_i,
-                          L_j,
-                          K,
-                          t_ij,
-                          alpha=0.7,
-                          beta=0.7,
-                          theta=7,
-                          delta=0.3585,
-                          rho=0.9094,
-                          lambda=0.01,
-                          epsilon=0.01,
-                          mu=0.3,
-                          eta=0.15,
-                          nu_init=0.05,
-                          tol=10^-10,
-                          maxiter=1000,
-                          FS){
+                                  L_i,
+                                  L_j,
+                                  K,
+                                  t_ij,
+                                  alpha=0.7,
+                                  beta=0.7,
+                                  theta=7,
+                                  delta=0.3585,
+                                  rho=0.9094,
+                                  lambda=0.01,
+                                  epsilon=0.01,
+                                  mu=0.3,
+                                  eta=0.15,
+                                  nu_init=0.05,
+                                  tol=10^-10,
+                                  maxiter=1000,
+                                  FS){
   
   # Formatting of input data
   if(is.data.frame(L_i)){
@@ -108,7 +108,7 @@ NoPricesInversionModel = function(N,
   y_bar = Inc$y_bar
   
   #Density of development
-  DensD = density_development(K=K,
+  DensD = density_development_noprices(K=K,
                               w=w,
                               L_j=L_j,
                               y_bar=y_bar,
@@ -126,7 +126,7 @@ NoPricesInversionModel = function(N,
   Q_norm = DensD$Q_norm
   Q_f    = DensD$Q_norm
   Q_r    = DensD$Q_norm
-  
+
   #Productivities
   Prod = productivity(N=N,
                       Q=Q_f,
@@ -136,8 +136,7 @@ NoPricesInversionModel = function(N,
                       t_ij = t_ij,
                       delta=delta,
                       lambda=lambda,
-                      beta=beta
-  )
+                      beta=beta)
   A = Prod$A
   a = Prod$a
   

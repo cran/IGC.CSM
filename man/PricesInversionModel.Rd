@@ -20,9 +20,9 @@ PricesInversionModel(
   lambda = 0.01,
   epsilon = 0.01,
   mu = 0.3,
-  eta = 0.15,
+  eta = 0.1548,
   nu_init = 0.05,
-  tol = 10^-12,
+  tol = 10^-10,
   maxiter = 1000
 )
 }
@@ -67,11 +67,14 @@ Default nu=0.01.}
 Default maxiter=1000.}
 }
 \value{
-Equilibrium values.
+A list containing equilibrium values: population (L_i), employment (L_j), productivities (A, a),
+real income (u), amenities (B, b), wages (w), density of development (varphi), welfare (U),
+normalized prices (Q_norm), commercial floorspace share (ttheta), total floorspace (FS),
+residential floorspace (FS_r), and commercial floorspace (FS_f).
 }
 \description{
 Function to invert model, so amenities, wages, productivities, and development density
-are chosen to match model to data. In this version you require housing prices
+are chosen to match model to data.
 }
 \examples{
 N=5
@@ -86,10 +89,9 @@ t_ij = rbind(c(0.0, 6.6, 5.5, 5.6, 6.4),
              c(6.4, 4.4, 3.0, 2.7, 0.0))
 
 PricesInversionModel(N=N,
-               L_i=L_i,
-               L_j=L_j,
-               Q=Q,
-               K=K,
-               t_ij=t_ij)
-               
+                     L_i=L_i,
+                     L_j=L_j,
+                     Q=Q,
+                     K=K,
+                     t_ij=t_ij)
 }

@@ -26,11 +26,11 @@ living_amenities_simple = function(theta,
                                    eta){
   Q_mean = exp(mean(log(Q)));
   Q_norm = Q/Q_mean;
-  L_i_mean = exp(mean(log(L_i)));
-  L_i_norm = L_i/L_i_mean;
-  W_i_mean = exp(mean(log(W_i)));
-  W_i_norm = W_i/W_i_mean;
-  B = array_operator(array_operator(L_i_norm^(1/theta), Q_norm^(1-alpha), '*'), W_i_norm^((-1)), '*');
+  #L_i_mean = exp(mean(log(L_i)));
+  #L_i_norm = L_i/L_i_mean;
+  #W_i_mean = exp(mean(log(W_i)));
+  #W_i_norm = W_i/W_i_mean;
+  B = array_operator(array_operator(L_i^(1/theta), Q_norm^(1-alpha), '*'), W_i^((-1)), '*');
   L_i_dens = (array_operator(L_i, K, '/'));
   L_i_dens_per = aperm(array(L_i_dens, dim=c(N,1)), c(2,1));
   L_i_dens_rep = kronecker(L_i_dens_per, array(1, dim=c(N, 1)));

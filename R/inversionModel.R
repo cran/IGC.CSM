@@ -61,7 +61,7 @@ inversionModel = function(N,
                           epsilon=0.01,
                           mu=0.3,
                           eta=0.1548,
-                          nu_init=0.005,
+                          nu_init=0.05,
                           tol=10^-10,
                           maxiter=1000,
                           verbose=FALSE){
@@ -111,7 +111,7 @@ inversionModel = function(N,
                        nu_init=nu_init,
                        tol=tol,
                        maxiter=maxiter,
-                       verbose=verbose)
+                       verbose=FALSE)
   
   # Equilibrium wages
   w = WI$w
@@ -178,7 +178,7 @@ inversionModel = function(N,
   # Save and export
   Q_alpha = Q_norm^(1-alpha)
   u = array_operator(array_operator(W_i,Q_alpha,'/'),B,'*')
-  U = (sumDims(u,1))^(1/theta)
+  U = (sumDims(u^theta,1))^(1/theta)
   
-  return(list(A=A, a=a, u=u, B=B, b=b, w=w, varphi=varphi, U=U, Q_norm=Q_norm, ttheta=ttheta))
+  return(list(L_i = L_i, L_j = L_j, A=A, a=a, u=u, B=B, b=b, w=w, varphi=varphi, U=U, Q_norm=Q_norm, ttheta=ttheta))
 }

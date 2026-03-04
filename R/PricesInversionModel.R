@@ -1,5 +1,5 @@
 #' Function to invert model, so amenities, wages, productivities, and development density
-#'  are chosen to match model to data. In this version you require housing prices
+#'  are chosen to match model to data.
 #'
 #' @param N Integer - Number of locations.
 #' @param L_i Nx1 matrix - Number of residents in each location.
@@ -59,9 +59,9 @@ PricesInversionModel = function(N,
                           lambda=0.01,
                           epsilon=0.01,
                           mu=0.3,
-                          eta=0.15,
+                          eta=0.1548,
                           nu_init=0.05,
-                          tol=10^-12,
+                          tol=10^-10,
                           maxiter=1000){
   
   # Formatting of input data
@@ -177,5 +177,5 @@ PricesInversionModel = function(N,
   u = array_operator(array_operator(W_i,Q_alpha,'/'),B,'*')
   U = (sumDims(u^theta,1))^(1/theta)
   
-  return(list(L_i = L_i, L_j = L_j, Q_norm = Q_norm, A=A, a=a, u=u, B=B, b=b, w=w, varphi=varphi, U=U, ttheta=ttheta, FS=FS, FS_r=FS_r, FS_f=FS_f))
+  return(list(L_i = L_i, L_j = L_j, A=A, a=a, u=u, B=B, b=b, w=w, varphi=varphi, U=U, Q_norm=Q_norm, ttheta=ttheta, FS=FS, FS_r=FS_r, FS_f=FS_f))
 }
